@@ -2,8 +2,9 @@
 name = "ncal"
 version = "0.1.0"
 edition = "2024"
-description = "A Nepali calendar for the impatient."
-licesne = "MIT"
+description = "A Nepali calendar for the terminal."
+license = "MIT"
+authors= ["rajatdahal contact@rajatdahal.com.np"]
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
