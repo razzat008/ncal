@@ -1,0 +1,11 @@
+[package]
+name = "ncal"
+version = "0.1.0"
+edition = "2024"
+description = "A Nepali calendar for the impatient."
+licesne = "MIT"
+
+[dependencies]
+clap = { version = "4.6.1", features = ["derive"] }
+sys-locale = "0.3.2"
+thiserror = "2.0.18"
