@@ -14,4 +14,20 @@ impl Config {
             Err(e) => Err(e),
         }
     }
+
+    pub fn validate(&self) -> Result<(), NcalError> {
+        if let Some(month) = self.month {
+            if month > 12 {
+                return Err(NcalError::InvalidMonth);
+            }
+        }
+
+        if let Some(day) = self.day {
+            if day > 31 {
+                return Err(NcalError::InvalidDay);
+            }
+        }
+
+        Ok(())
+    }
 }
