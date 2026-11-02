@@ -190,10 +190,19 @@ pub fn moon_longitude(jd_tt: f64) -> f64 {
     norm360(lp + sum / 1_000_000.0)
 }
 
-/// The moon's elongation from the sun, 0–360°, at a UT instant. One tithi is 12°.
+/// Annual aberration of the sun, in degrees (Meeus 25.10: 20.4898″ at 1 AU).
+///
+/// Nutation shifts both longitudes alike and cancels in the elongation;
+/// aberration displaces only the sun, so it does not. Leaving it out made every
+/// tithi boundary about 40 seconds late against JPL DE440 — enough to move a
+/// festival whose tithi begins within a minute of its kala instant.
+const SUN_ABERRATION: f64 = 20.4898 / 3600.0;
+
+/// The moon's apparent elongation from the sun, 0–360°, at a UT instant. One
+/// tithi is 12°.
 pub fn elongation(jd_ut: f64) -> f64 {
     let jd_tt = tt_from_ut(jd_ut);
-    norm360(moon_longitude(jd_tt) - sun_longitude(jd_tt))
+    norm360(moon_longitude(jd_tt) - (sun_longitude(jd_tt) - SUN_ABERRATION))
 }
 
 /// The tithi running at a UT instant, numbered 1–30 from Shukla Pratipada.
@@ -460,6 +469,18 @@ mod tests {
         // Meeus example 7.a and 7.b.
         assert!((julian_day(date(1957, 10, 4), 0.81) - 2436116.31).abs() < 1e-6);
         assert!((julian_day(date(2000, 1, 1), 0.5) - 2451545.0).abs() < 1e-6);
+    }
+
+    /// New moons from JPL DE440 (via Skyfield), as UT Julian Days. The apparent
+    /// elongation is zero there; without solar aberration it came out ~0.0057°
+    /// short, which is every tithi boundary landing about 40 seconds late.
+    #[test]
+    fn elongation_is_zero_at_jpl_new_moons() {
+        for jd in [2448183.150475, 2460970.017483, 2467171.585537] {
+            let e = elongation(jd);
+            let off = if e > 180.0 { e - 360.0 } else { e };
+            assert!(off.abs() < 0.004, "elongation {off}° at JPL new moon {jd}");
+        }
     }
 
     #[test]
