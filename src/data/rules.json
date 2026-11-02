@@ -23,7 +23,17 @@
     "  begins    - not an instant: the day the tithi starts on. Currently unused.",
     "",
     "A date the government moves for its own reasons goes in festivals.json's",
-    "'lunar' array, which overrides whatever is computed here for that BS year."
+    "'lunar' array, which overrides whatever is computed here for that BS year.",
+    "",
+    "'spans' are the gazetted holiday blocks: every day from the date 'from' resolves",
+    "to through 'to' plus 'extra_days' is a public holiday. Dashain runs Fulpati to",
+    "Dwadashi, Tihar from Laxmi Puja to the day after Bhai Tika. Days in between that",
+    "carry no holiday of their own get the span's name."
+  ],
+
+  "spans": [
+    { "from": "Fulpati",    "to": "Dashain Dwadashi", "extra_days": 0, "en": "Dashain holiday", "np": "दशैँ बिदा",  "holiday": true },
+    { "from": "Laxmi Puja", "to": "Bhai Tika",        "extra_days": 1, "en": "Tihar holiday",   "np": "तिहार बिदा", "holiday": true }
   ],
 
   "computed": [
@@ -55,19 +65,21 @@
     { "lunar_month": 6,  "paksha": "shukla",  "tithi": 8,  "kala": "madhyanna", "en": "Maha Ashtami",           "np": "महाअष्टमी",              "holiday": true  },
     { "lunar_month": 6,  "paksha": "shukla",  "tithi": 9,  "kala": "aparahna",  "en": "Maha Navami",            "np": "महानवमी",                "holiday": true  },
     { "lunar_month": 6,  "paksha": "shukla",  "tithi": 10, "kala": "aparahna",  "en": "Vijaya Dashami",         "np": "विजया दशमी",             "holiday": true  },
-    { "lunar_month": 6,  "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Kojagrat Purnima",       "np": "कोजाग्रत पूर्णिमा",       "holiday": true  },
-    { "lunar_month": 6,  "paksha": "krishna", "tithi": 13, "kala": "udaya",     "en": "Kaag Tihar",             "np": "काग तिहार",              "holiday": true  },
-    { "lunar_month": 6,  "paksha": "krishna", "tithi": 14, "kala": "udaya",     "en": "Kukur Tihar",            "np": "कुकुर तिहार",            "holiday": true  },
+    { "lunar_month": 6,  "paksha": "shukla",  "tithi": 12, "kala": "udaya",     "en": "Dashain Dwadashi",       "np": "दशैँ द्वादशी",            "holiday": true  },
+    { "lunar_month": 6,  "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Kojagrat Purnima",       "np": "कोजाग्रत पूर्णिमा",       "holiday": false },
+    { "lunar_month": 6,  "paksha": "krishna", "tithi": 13, "kala": "udaya",     "en": "Kaag Tihar",             "np": "काग तिहार",              "holiday": false },
+    { "lunar_month": 6,  "paksha": "krishna", "tithi": 14, "kala": "udaya",     "en": "Kukur Tihar",            "np": "कुकुर तिहार",            "holiday": false },
     { "lunar_month": 6,  "paksha": "krishna", "tithi": 15, "kala": "pradosh",   "en": "Laxmi Puja",             "np": "लक्ष्मी पूजा",            "holiday": true  },
 
     { "lunar_month": 7,  "paksha": "shukla",  "tithi": 1,  "kala": "udaya",     "en": "Govardhan and Mha Puja", "np": "गोवर्धन र म्हः पूजा",     "holiday": true  },
     { "lunar_month": 7,  "paksha": "shukla",  "tithi": 2,  "kala": "madhyanna", "en": "Bhai Tika",              "np": "भाइटीका",                "holiday": true  },
     { "lunar_month": 7,  "paksha": "shukla",  "tithi": 6,  "kala": "pradosh",   "en": "Chhath",                 "np": "छठ पर्व",                "holiday": true  },
     { "lunar_month": 7,  "paksha": "shukla",  "tithi": 11, "kala": "udaya",     "en": "Haribodhini Ekadashi",   "np": "हरिबोधिनी एकादशी",       "holiday": false },
+    { "lunar_month": 7,  "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Guru Nanak Jayanti",     "np": "गुरु नानक जयन्ती",        "holiday": true  },
     { "lunar_month": 7,  "paksha": "krishna", "tithi": 14, "kala": "udaya",     "en": "Bala Chaturdashi",       "np": "बाला चतुर्दशी",           "holiday": false },
 
     { "lunar_month": 8,  "paksha": "shukla",  "tithi": 5,  "kala": "udaya",     "en": "Vivaha Panchami",        "np": "विवाह पञ्चमी",           "holiday": false },
-    { "lunar_month": 8,  "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Yomari Punhi",           "np": "योमरी पुन्ही",            "holiday": false },
+    { "lunar_month": 8,  "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Yomari Punhi",           "np": "योमरी पुन्ही",            "holiday": true  },
     { "lunar_month": 8,  "paksha": "krishna", "tithi": 8,  "kala": "udaya",     "en": "Pitri Smriti Diwas",     "np": "पितृ स्मृति दिवस",        "holiday": false },
 
     { "lunar_month": 9,  "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Swasthani Brata begins", "np": "स्वस्थानी व्रत आरम्भ",     "holiday": false },
@@ -78,8 +90,8 @@
 
     { "lunar_month": 11, "paksha": "shukla",  "tithi": 1,  "kala": "udaya",     "en": "Gyalpo Losar",           "np": "ग्याल्पो ल्होछार",        "holiday": true  },
     { "lunar_month": 11, "paksha": "shukla",  "tithi": 15, "kala": "pradosh",   "en": "Holika Dahan",           "np": "होलिका दहन",             "holiday": false },
-    { "lunar_month": 11, "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Fagu Purnima (hills)",   "np": "फागु पूर्णिमा (पहाड)",    "holiday": true  },
-    { "lunar_month": 11, "paksha": "krishna", "tithi": 1,  "kala": "udaya",     "en": "Fagu Purnima (Terai)",   "np": "फागु पूर्णिमा (तराई)",    "holiday": true  },
+    { "lunar_month": 11, "paksha": "shukla",  "tithi": 15, "kala": "pradosh",   "en": "Fagu Purnima (hills)",   "np": "फागु पूर्णिमा (पहाड)",    "holiday": true  },
+    { "lunar_month": 11, "paksha": "shukla",  "tithi": 15, "kala": "udaya",     "en": "Fagu Purnima (Terai)",   "np": "फागु पूर्णिमा (तराई)",    "holiday": true  },
     { "lunar_month": 11, "paksha": "krishna", "tithi": 15, "kala": "madhyanna", "en": "Ghode Jatra",            "np": "घोडेजात्रा",             "holiday": true  },
 
     { "lunar_month": 12, "paksha": "shukla",  "tithi": 1,  "kala": "udaya",     "en": "Yugadi",                 "np": "युगादि नव वर्ष",          "holiday": false },

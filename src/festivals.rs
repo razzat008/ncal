@@ -23,8 +23,8 @@ use std::sync::{Arc, Mutex, OnceLock};
 use chrono::{Datelike, Duration, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-use crate::panchanga::{self, Kala};
 use crate::BsDate;
+use crate::panchanga::{self, Kala};
 
 const FESTIVAL_DATA: &str = include_str!("data/festivals.json");
 const RULE_DATA: &str = include_str!("data/rules.json");
@@ -80,7 +80,6 @@ struct FestivalData {
     #[serde(default)]
     lunar: Vec<LunarEntry>,
 }
-
 
 // ---- computed (tithi) festivals ---------------------------------------------
 
@@ -144,13 +143,26 @@ impl ComputedRule {
 struct RuleData {
     #[serde(default)]
     computed: Vec<ComputedRule>,
+    #[serde(default)]
+    spans: Vec<SpanRule>,
+}
+
+/// A gazetted holiday block between two computed festivals, such as Dashain's
+/// Fulpati-to-Dwadashi. Days inside it with no holiday of their own get its name.
+#[derive(Debug, Clone, Deserialize)]
+struct SpanRule {
+    from: String,
+    to: String,
+    #[serde(default)]
+    extra_days: i64,
+    #[serde(flatten)]
+    festival: Festival,
 }
 
 fn rules() -> &'static RuleData {
     static RULES: OnceLock<RuleData> = OnceLock::new();
-    RULES.get_or_init(|| {
-        serde_json::from_str(RULE_DATA).expect("embedded rules.json must be valid")
-    })
+    RULES
+        .get_or_init(|| serde_json::from_str(RULE_DATA).expect("embedded rules.json must be valid"))
 }
 
 /// The new moon opening each amanta lunar month of BS year `bs_year`, keyed by
@@ -217,10 +229,14 @@ fn festival_date(tithi_start: f64, tithi_index: u8, kala: Kala) -> Option<NaiveD
         return Some(start_date);
     }
 
-    let next = if tithi_index == 30 { 1 } else { tithi_index + 1 };
+    let next = if tithi_index == 30 {
+        1
+    } else {
+        tithi_index + 1
+    };
     // A tithi runs 19-26 hours, so its end is comfortably inside two days.
-    let end = *panchanga::tithi_starts_between(next, tithi_start + 0.1, tithi_start + 2.5)
-        .first()?;
+    let end =
+        *panchanga::tithi_starts_between(next, tithi_start + 0.1, tithi_start + 2.5).first()?;
 
     for offset in -1..=2 {
         let day = start_date.checked_add_signed(Duration::days(offset))?;
@@ -300,6 +316,7 @@ fn computed_for_year(bs_year: u16) -> YearFestivals {
         found.push((bs, rule.festival.clone()));
     }
 
+    fill_spans(&mut found);
     found.sort_by_key(|(bs, _)| (bs.year, bs.month, bs.day));
 
     let entry = Arc::new(found);
@@ -307,6 +324,31 @@ fn computed_for_year(bs_year: u16) -> YearFestivals {
         guard.insert(bs_year, Arc::clone(&entry));
     }
     entry
+}
+
+/// Mark every day of each gazetted span as a holiday. A span whose endpoints did
+/// not resolve this year is skipped rather than guessed at.
+fn fill_spans(found: &mut Vec<(BsDate, Festival)>) {
+    let ad_of = |found: &[(BsDate, Festival)], name: &str| {
+        found
+            .iter()
+            .find(|(_, f)| f.en == name)
+            .and_then(|(bs, _)| crate::bs_to_ad(*bs).ok())
+    };
+    for span in &rules().spans {
+        let (Some(from), Some(to)) = (ad_of(found, &span.from), ad_of(found, &span.to)) else {
+            continue;
+        };
+        let mut day = from;
+        while day <= to + Duration::days(span.extra_days) {
+            if let Ok(bs) = crate::ad_to_bs(day)
+                && !found.iter().any(|(when, f)| *when == bs && f.holiday)
+            {
+                found.push((bs, span.festival.clone()));
+            }
+            day += Duration::days(1);
+        }
+    }
 }
 
 fn data() -> &'static FestivalData {
@@ -496,6 +538,39 @@ mod tests {
         })
     }
 
+    /// The gazetted Dashain and Tihar blocks are holidays end to end, including
+    /// days like Ekadashi that carry no festival of their own.
+    #[test]
+    fn dashain_and_tihar_blocks_are_holidays_throughout() {
+        // (BS year, first (m, d), last (m, d)) as published by the Ministry of Home Affairs.
+        let blocks = [
+            (2081, (6, 24), (6, 28)),
+            (2081, (7, 15), (7, 19)),
+            (2082, (6, 13), (6, 18)),
+            (2082, (7, 3), (7, 7)),
+            (2083, (6, 31), (7, 6)),
+            (2083, (7, 22), (7, 26)),
+        ];
+        for (year, first, last) in blocks {
+            for month in first.0..=last.0 {
+                let from = if month == first.0 { first.1 } else { 1 };
+                let to = if month == last.0 {
+                    last.1
+                } else {
+                    crate::bs_month_len(year, month).unwrap()
+                };
+                for day in from..=to {
+                    let bs = BsDate { year, month, day };
+                    let fs = festivals_on(bs, bs_to_ad(bs).unwrap());
+                    assert!(
+                        fs.iter().any(|f| f.holiday),
+                        "BS {year}-{month}-{day} should be a holiday, got {fs:?}"
+                    );
+                }
+            }
+        }
+    }
+
     /// The test that decides whether this ships.
     ///
     /// Every date here is one published for Nepal, not one this code produced.
@@ -523,8 +598,11 @@ mod tests {
             (2081, "Chhath", (2024, 11, 7)),
             // BS 2081 — spring
             (2081, "Maha Shivaratri", (2025, 2, 26)),
-            (2081, "Fagu Purnima (hills)", (2025, 3, 14)),
-            (2081, "Fagu Purnima (Terai)", (2025, 3, 15)),
+            // Gazette: Falgun 29 for the hills, Chaitra 1 for the Terai.
+            (2081, "Fagu Purnima (hills)", (2025, 3, 13)),
+            (2081, "Fagu Purnima (Terai)", (2025, 3, 14)),
+            (2081, "Jitiya", (2024, 9, 25)),
+            (2081, "Guru Nanak Jayanti", (2024, 11, 15)),
             // BS 2082 — Dashain and Tihar in an ordinary year
             (2082, "Ghatasthapana", (2025, 9, 22)),
             (2082, "Fulpati", (2025, 9, 29)),
@@ -547,8 +625,11 @@ mod tests {
             (2082, "Rishi Panchami", (2025, 8, 28)),
             (2082, "Indra Jatra", (2025, 9, 6)),
             (2082, "Maha Shivaratri", (2026, 2, 15)),
-            (2082, "Fagu Purnima (hills)", (2026, 3, 3)),
-            (2082, "Fagu Purnima (Terai)", (2026, 3, 4)),
+            (2082, "Fagu Purnima (hills)", (2026, 3, 2)),
+            (2082, "Fagu Purnima (Terai)", (2026, 3, 3)),
+            // The gazette's own date, a day after udaya ashtami: a `lunar` override.
+            (2082, "Jitiya", (2025, 9, 15)),
+            (2082, "Ghode Jatra", (2026, 3, 18)),
             (2082, "Ram Navami", (2026, 3, 27)),
             // BS 2083 — the run every source agrees on. Vijaya Dashami 2083 is
             // deliberately absent: popular sources say 20 October 2026, while
@@ -562,6 +643,27 @@ mod tests {
             (2083, "Fulpati", (2026, 10, 17)),
             (2083, "Maha Ashtami", (2026, 10, 18)),
             (2083, "Maha Navami", (2026, 10, 19)),
+            // BS 2083 — the rest of the gazetted list.
+            (2083, "Buddha Jayanti", (2026, 5, 1)),
+            (2083, "Janai Purnima", (2026, 8, 28)),
+            (2083, "Gai Jatra", (2026, 8, 29)),
+            (2083, "Krishna Janmashtami", (2026, 9, 4)),
+            (2083, "Haritalika Teej", (2026, 9, 14)),
+            (2083, "Indra Jatra", (2026, 9, 25)),
+            (2083, "Jitiya", (2026, 10, 4)),
+            (2083, "Laxmi Puja", (2026, 11, 8)),
+            (2083, "Govardhan and Mha Puja", (2026, 11, 10)),
+            (2083, "Bhai Tika", (2026, 11, 11)),
+            (2083, "Chhath", (2026, 11, 15)),
+            (2083, "Yomari Punhi", (2026, 12, 24)),
+            (2083, "Sonam Losar", (2027, 2, 7)),
+            (2083, "Basanta Panchami", (2027, 2, 11)),
+            (2083, "Maha Shivaratri", (2027, 3, 6)),
+            (2083, "Gyalpo Losar", (2027, 3, 9)),
+            (2083, "Fagu Purnima (hills)", (2027, 3, 21)),
+            (2083, "Fagu Purnima (Terai)", (2027, 3, 22)),
+            (2083, "Ghode Jatra", (2027, 4, 6)),
+            (2083, "Martyrs' Day", (2027, 1, 30)),
         ];
 
         let mut wrong = Vec::new();
@@ -569,7 +671,9 @@ mod tests {
             let expected = NaiveDate::from_ymd_opt(*y, *m, *d).unwrap();
             match find(*year, name) {
                 Some(got) if got == expected => {}
-                Some(got) => wrong.push(format!("BS {year} {name}: got {got}, expected {expected}")),
+                Some(got) => {
+                    wrong.push(format!("BS {year} {name}: got {got}, expected {expected}"))
+                }
                 None => wrong.push(format!("BS {year} {name}: not found, expected {expected}")),
             }
         }

@@ -12,10 +12,10 @@
     "             observance the government moves for reasons no ephemeris predicts.",
     "",
     "'lunar_years_covered' is the inclusive [first, last] BS year range those overrides",
-    "cover. It is empty because there are none: nothing has needed correcting."
+    "cover. BS 2082: the gazette put Jitiya on Bhadra 30, a day after its udaya ashtami."
   ],
 
-  "lunar_years_covered": [],
+  "lunar_years_covered": [2082, 2082],
 
   "fixed": [
     { "month": 1,  "day": 1,  "en": "Nepali New Year",       "np": "नयाँ वर्ष",           "holiday": true  },
@@ -29,23 +29,27 @@
     { "month": 6,  "day": 1,  "en": "Ashwin Sankranti",      "np": "असोज सङ्क्रान्ति",     "holiday": false },
     { "month": 6,  "day": 3,  "en": "Constitution Day",      "np": "संविधान दिवस",        "holiday": true  },
     { "month": 7,  "day": 1,  "en": "Kartik Sankranti",      "np": "कार्तिक सङ्क्रान्ति",  "holiday": false },
+    { "month": 7,  "day": 25, "en": "Falgunanda Jayanti",    "np": "फाल्गुनन्द जयन्ती",    "holiday": true  },
     { "month": 8,  "day": 1,  "en": "Mangsir Sankranti",     "np": "मङ्सिर सङ्क्रान्ति",   "holiday": false },
     { "month": 9,  "day": 1,  "en": "Poush Sankranti",       "np": "पुष सङ्क्रान्ति",      "holiday": false },
     { "month": 9,  "day": 15, "en": "Tamu Losar",            "np": "तमु ल्होसार",         "holiday": true  },
-    { "month": 9,  "day": 27, "en": "Prithvi Jayanti",       "np": "पृथ्वी जयन्ती",        "holiday": false },
+    { "month": 9,  "day": 27, "en": "Prithvi Jayanti",       "np": "पृथ्वी जयन्ती",        "holiday": true  },
     { "month": 10, "day": 1,  "en": "Maghe Sankranti",       "np": "माघे सङ्क्रान्ति",     "holiday": true  },
+    { "month": 10, "day": 16, "en": "Martyrs' Day",          "np": "शहीद दिवस",           "holiday": true  },
     { "month": 11, "day": 1,  "en": "Falgun Sankranti",      "np": "फागुन सङ्क्रान्ति",    "holiday": false },
     { "month": 11, "day": 7,  "en": "Democracy Day",         "np": "प्रजातन्त्र दिवस",     "holiday": true  },
-    { "month": 11, "day": 16, "en": "Martyrs' Day",          "np": "शहीद दिवस",           "holiday": true  },
     { "month": 12, "day": 1,  "en": "Chaitra Sankranti",     "np": "चैत सङ्क्रान्ति",      "holiday": false }
   ],
 
   "ad_fixed": [
     { "ad_month": 1,  "ad_day": 1,  "en": "English New Year",          "np": "अंग्रेजी नयाँ वर्ष", "holiday": false },
-    { "ad_month": 3,  "ad_day": 8,  "en": "International Women's Day", "np": "नारी दिवस",         "holiday": false },
+    { "ad_month": 3,  "ad_day": 8,  "en": "International Women's Day", "np": "नारी दिवस",         "holiday": true  },
     { "ad_month": 5,  "ad_day": 1,  "en": "Labour Day",                "np": "मजदुर दिवस",        "holiday": true  },
+    { "ad_month": 12, "ad_day": 3,  "en": "International Day of Persons with Disabilities", "np": "अपाङ्गता भएका व्यक्तिहरूको अन्तर्राष्ट्रिय दिवस", "holiday": true  },
     { "ad_month": 12, "ad_day": 25, "en": "Christmas",                 "np": "क्रिसमस",           "holiday": true  }
   ],
 
-  "lunar": []
+  "lunar": [
+    { "year": 2082, "month": 5, "day": 30, "en": "Jitiya", "np": "जितिया पर्व", "holiday": true }
+  ]
 }
